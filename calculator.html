@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+
+        #display {
+            width: 220px;
+            height: 40px;
+            font-size: 24px;
+            text-align: right;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            border-collapse: collapse;
+            margin: 20px auto;
+        }
+
+        td {
+            padding: 10px;
+        }
+
+        button {
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+            border: none;
+            border-radius: 50%;
+            background-color: #f0f0f0;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #ccc;
+        }
+
+        button:active {
+            background-color: #aaa;
+        }
+    </style>
+</head>
+<body>
+    <h1>Calculator</h1>
+    <form>
+        <input type="text" id="display" readonly>
+        <table>
+            <tr>
+                <td><button type="button" id="clear">C</button></td>
+                <td><button type="button" id="backspace">←</button></td>
+                <td><button type="button" id="divide">÷</button></td>
+            </tr>
+            <tr>
+                <td><button type="button" id="7">7</button></td>
+                <td><button type="button" id="8">8</button></td>
+                <td><button type="button" id="9">9</button></td>
+                <td><button type="button" id="multiply">×</button></td>
+            </tr>
+            <tr>
+                <td><button type="button" id="4">4</button></td>
+                <td><button type="button" id="5">5</button></td>
+                <td><button type="button" id="6">6</button></td>
+                <td><button type="button" id="subtract">-</button></td>
+            </tr>
+            <tr>
+                <td><button type="button" id="1">1</button></td>
+                <td><button type="button" id="2">2</button></td>
+                <td><button type="button" id="3">3</button></td>
+                <td><button type="button" id="add">+</button></td>
+            </tr>
+            <tr>
+                <td><button type="button" id="0">0</button></td>
+                <td><button type="button" id="decimal">.</button></td>
+                <td colspan="2"><button type="button" id="equals">=</button></td>
+            </tr>
+        </table>
+    </form>
+
+    <script>
+        let display = document.getElementById('display');
+        let buttons = document.querySelectorAll('button');
+
+        let calculator = {
+            displayValue: '0',
+            firstOperand: null,
+            operator: null,
+            waitingForSecondOperand: false,
+
+            handleButtonPress: function(button) {
+                let buttonValue = button.id;
+
+                if (buttonValue === 'clear') {
+                    this.resetCalculator();
+                } else if (buttonValue === 'backspace') {
+                    this.displayValue = this.displayValue.slice(0, -1) || '0';
+                } else if (buttonValue === 'divide' || buttonValue === 'multiply' || buttonValue === 'subtract' || buttonValue === 'add') {
+                    this.handleOperator(buttonValue);
+                } else if (buttonValue === 'equals') {
+                    this.handleEquals();
+                } else if (buttonValue === 'decimal') {
+                    this.inputDecimal();
+                } else {
+                    this.inputDigit(buttonValue);
+                }
+
+                display.value = this.displayValue;
+            },
+
+            resetCalculator: function() {
+                this.displayValue = '0';
+                this.firstOperand = null;
+                this.operator = null;
+                this.waitingForSecondOperand = false;
+            },
+
+            handleOperator: function(nextOperator) {
+                const inputValue = parseFloat(this.displayValue);
+
+                if (this.operator && this.waitingForSecondOperand) {
+                    this.operator = nextOperator;
+                    return;
+                }
+
+                if (this.firstOperand === null) {
+                    this.firstOperand = inputValue;
+                } else if (this.operator) {
+                    const result = this.calculate(this.firstOperand, inputValue, this.operator);
+                    this.displayValue = String(result);
+                    this.firstOperand = result;
+                }
+
+                this.waitingForSecondOperand = true;
+                this.operator = nextOperator;
+                this.displayValue = '0';
+            },
+
+            handleEquals: function() {
+                if (!this.operator || this.waitingForSecondOperand) return;
+
+                const inputValue = parseFloat(this.displayValue);
+                const result = this.calculate(this.firstOperand, inputValue, this.operator);
+
+                this.displayValue = String(result);
+                this.firstOperand = null;
+                this.operator = null;
+                this.waitingForSecondOperand = false;
+            },
+
+            inputDigit: function(digit) {
+                if (this.waitingForSecondOperand) {
+                    this.displayValue = digit;
+                    this.waitingForSecondOperand = false;
+                } else {
+                    this.displayValue = this.displayValue === '0' ? digit : this.displayValue + digit;
+                }
+            },
+
+            inputDecimal: function() {
+                if (!this.displayValue.includes('.')) {
+                    this.displayValue += '.';
+                }
+            },
+
+            calculate: function(firstOperand, secondOperand, operator) {
+                switch (operator) {
+                    case 'add':
+                        return firstOperand + secondOperand;
+                    case 'subtract':
+                        return firstOperand - secondOperand;
+                    case 'multiply':
+                        return firstOperand * secondOperand;
+                    case 'divide':
+                        return firstOperand / secondOperand;
+                    default:
+                        return secondOperand;
+                }
+            }
+        };
+
+        buttons.forEach(button => {
+            button.addEventListener('click', (event) => {
+                calculator.handleButtonPress(event.target);
+            });
+        });
+    </script>
+</body>
+</html>
